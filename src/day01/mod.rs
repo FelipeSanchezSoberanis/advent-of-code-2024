@@ -1,9 +1,9 @@
+use std::collections::HashMap;
 use std::fs;
 
 pub fn main() {
-    let mut left_numbers: Vec<u32> = vec![];
-    let mut right_numbers: Vec<u32> = vec![];
-    let mut diff: u32 = 0;
+    let mut left_numbers: HashMap<u32, u32> = HashMap::new();
+    let mut right_numbers: Vec<u32> = Vec::new();
 
     let input = match fs::read_to_string("src/day01/input.txt") {
         Ok(input) => input,
@@ -18,21 +18,26 @@ pub fn main() {
                     Ok(number) => number,
                     Err(err) => panic!("Could not parse number string: {err:?}"),
                 });
-            left_numbers.push(match numbers.next() {
+            let left_number = match numbers.next() {
                 Some(number) => number,
                 None => panic!("Could not get left number"),
-            });
-            right_numbers.push(match numbers.next() {
+            };
+            let right_number = match numbers.next() {
                 Some(number) => number,
                 None => panic!("Could not get right number"),
-            });
+            };
+            if !left_numbers.contains_key(&left_number) {
+                left_numbers.insert(left_number, 0);
+            };
+            right_numbers.push(right_number);
         });
-    left_numbers.sort();
-    right_numbers.sort();
-    for i in 0..left_numbers.len() {
-        let left_number = left_numbers[i];
-        let right_number = right_numbers[i];
-        diff = diff + left_number.abs_diff(right_number);
-    }
-    println!("{}", diff);
+    right_numbers.iter().for_each(|right_number| {
+        if left_numbers.contains_key(right_number) {
+            left_numbers.insert(*right_number, left_numbers.get(right_number).unwrap() + 1);
+        };
+    });
+    let res = left_numbers
+        .keys()
+        .fold(0, |acc, key| acc + key * left_numbers.get(key).unwrap());
+    println!("{}", res);
 }
