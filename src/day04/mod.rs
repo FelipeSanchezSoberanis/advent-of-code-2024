@@ -14,56 +14,39 @@ pub fn main() {
     let rows = array.len();
     let cols = array[0].len();
 
-    let mut horizontal_string = String::from("");
-    for row in 0..rows {
-        for col in 0..cols {
-            horizontal_string.push(array[row][col]);
-        }
-        horizontal_string.push(' ');
-    }
+    let mut res = 0;
 
-    let mut vertical_string = String::from("");
-    for col in 0..cols {
-        for row in 0..rows {
-            vertical_string.push(array[row][col]);
-        }
-        vertical_string.push(' ');
-    }
-
-    let mut diagonal_down_string = String::from("");
-    for row in 0..rows - 3 {
-        for col in 0..cols - 3 {
-            for i in 0..4 {
-                diagonal_down_string.push(array[row + i][col + i]);
+    for row in 1..rows - 1 {
+        for col in 1..cols - 1 {
+            if array[row][col] != 'A' {
+                continue;
             }
-            diagonal_down_string.push(' ');
-        }
-    }
 
-    let mut diagonal_up_string = String::from("");
-    for row in 3..rows {
-        for col in 0..cols - 3 {
-            for i in 0..4 {
-                diagonal_up_string.push(array[row - i][col + i]);
+            let top_left = array[row - 1][col - 1];
+            let top_right = array[row - 1][col + 1];
+            let bottom_left = array[row + 1][col - 1];
+            let bottom_right = array[row + 1][col + 1];
+            let chars = vec![top_left, top_right, bottom_right, bottom_left];
+
+            if !surrounded_by(&chars, 2, 'M')
+                || !surrounded_by(&chars, 2, 'S')
+                || top_left == bottom_right
+            {
+                continue;
             }
-            diagonal_up_string.push(' ');
+
+            res += 1;
         }
     }
-
-    let final_string = String::from("")
-        + &horizontal_string
-        + &vertical_string
-        + &diagonal_down_string
-        + &diagonal_up_string;
-
-    let res = final_string.matches("XMAS").collect::<Vec<&str>>().len()
-        + final_string
-            .chars()
-            .rev()
-            .collect::<String>()
-            .matches("XMAS")
-            .collect::<Vec<&str>>()
-            .len();
 
     println!("{res}");
+}
+
+fn surrounded_by(chars: &Vec<char>, count: usize, char: char) -> bool {
+    chars
+        .iter()
+        .filter(|&&c| c == char)
+        .collect::<Vec<_>>()
+        .len()
+        == count
 }
