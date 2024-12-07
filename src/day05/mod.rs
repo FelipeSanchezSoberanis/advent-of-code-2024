@@ -14,6 +14,10 @@ pub fn main() {
     println!("{res}");
 }
 
+fn make_update_valid(update: &Vec<u16>, rules: &HashMap<u16, HashSet<u16>>) -> Vec<u16> {
+    vec![]
+}
+
 fn should_be_before(a: &u16, b: &u16, rules: &HashMap<u16, HashSet<u16>>) -> bool {
     match rules.get(a) {
         Some(rule) => rule.contains(b),
@@ -91,4 +95,43 @@ fn parse_rule(line: &str) -> (u16, u16) {
             .parse::<u16>()
             .expect("could not parse after number"),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn get_rules() -> HashMap<u16, HashSet<u16>> {
+        let input =
+            fs::read_to_string("src/day05/input_tests.txt").expect("could not read input file");
+        let (rules, _) = parse_input(input);
+        rules
+    }
+
+    #[test]
+    fn test_make_update_valid_one() {
+        let rules = get_rules();
+        let input = vec![75, 97, 47, 61, 53];
+        let expected = vec![97, 75, 47, 61, 53];
+        let actual = make_update_valid(&input, &rules);
+        assert_eq!(expected, actual, "input: {:?}", input);
+    }
+
+    #[test]
+    fn test_make_update_valid_two() {
+        let rules = get_rules();
+        let input = vec![61, 13, 29];
+        let expected = vec![61, 29, 13];
+        let actual = make_update_valid(&input, &rules);
+        assert_eq!(expected, actual, "input: {:?}", input);
+    }
+
+    #[test]
+    fn test_make_update_valid_three() {
+        let rules = get_rules();
+        let input = vec![97, 13, 75, 29, 47];
+        let expected = vec![97, 75, 47, 29, 13];
+        let actual = make_update_valid(&input, &rules);
+        assert_eq!(expected, actual, "input: {:?}", input);
+    }
 }
