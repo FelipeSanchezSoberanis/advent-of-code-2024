@@ -8,14 +8,41 @@ pub fn main() {
     let (rules, updates) = parse_input(input);
     let res = updates
         .iter()
-        .filter(|update| is_update_valid(update, &rules))
-        .map(|update| update[update.len() / 2])
+        .filter(|update| !is_update_valid(update, &rules))
+        .map(|invalid_update| make_update_valid(invalid_update, &rules))
+        .map(|valid_update| valid_update[valid_update.len() / 2])
         .sum::<u16>();
     println!("{res}");
 }
 
 fn make_update_valid(update: &Vec<u16>, rules: &HashMap<u16, HashSet<u16>>) -> Vec<u16> {
-    vec![]
+    let mut valid_update: Vec<u16> = Vec::new();
+    update.iter().for_each(|num| valid_update.push(*num));
+
+    let mut i = 0;
+    while i < update.len() {
+        let curr_num = &valid_update[i];
+        let rem_nums = &valid_update.clone()[i + 1..valid_update.len()];
+        let nums_to_move = rem_nums
+            .iter()
+            .filter(|rem_num| should_be_before(rem_num, curr_num, rules))
+            .collect::<Vec<_>>();
+        nums_to_move.iter().rev().for_each(|&&num_to_move| {
+            if let Some(index_to_delete) = valid_update.iter().position(|&num| num == num_to_move) {
+                valid_update.remove(index_to_delete);
+            };
+            valid_update.insert(i, num_to_move)
+        });
+        if !nums_to_move.is_empty() {
+            if i <= 0 {
+                continue;
+            }
+            i -= 1;
+        }
+        i += 1;
+    }
+
+    valid_update
 }
 
 fn should_be_before(a: &u16, b: &u16, rules: &HashMap<u16, HashSet<u16>>) -> bool {
