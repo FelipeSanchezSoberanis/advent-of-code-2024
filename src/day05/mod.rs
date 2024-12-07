@@ -14,17 +14,21 @@ pub fn main() {
     println!("{res}");
 }
 
+fn should_be_before(a: &u16, b: &u16, rules: &HashMap<u16, HashSet<u16>>) -> bool {
+    match rules.get(a) {
+        Some(rule) => rule.contains(b),
+        None => false,
+    }
+}
+
 fn is_update_valid(update: &Vec<u16>, rules: &HashMap<u16, HashSet<u16>>) -> bool {
     for i in 0..update.len() {
         let number = &update[i];
         let remaining_numbers = &update[i + 1..update.len()];
 
-        if !remaining_numbers
+        if remaining_numbers
             .iter()
-            .all(|remaining_number| match rules.get(remaining_number) {
-                Some(rule) => !rule.contains(number),
-                None => true,
-            })
+            .any(|remaining_number| should_be_before(remaining_number, number, rules))
         {
             return false;
         }
