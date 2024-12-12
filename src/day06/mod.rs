@@ -6,7 +6,7 @@ enum CellState {
     OUTSIDE,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Eq, Hash, PartialEq, Copy)]
 enum Direction {
     #[default]
     UP,
@@ -33,7 +33,7 @@ impl Direction {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 struct Guard {
     row: usize,
     col: usize,
@@ -60,7 +60,7 @@ impl Guard {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Map {
     cells: Vec<Vec<char>>,
     rows: usize,
@@ -69,6 +69,10 @@ struct Map {
 }
 
 impl Map {
+    fn add_obstacle(&mut self, row: usize, col: usize) {
+        self.cells[row][col] = '#';
+    }
+
     fn from_string(input: String) -> Map {
         let mut cells: Vec<Vec<char>> = Vec::new();
         let mut guard = Guard::default();
@@ -148,15 +152,62 @@ impl Map {
 
 pub fn main() {
     let input = fs::read_to_string("src/day06/input.txt").expect("could not read input file");
-    let mut positions: HashSet<(usize, usize)> = HashSet::new();
-    let mut map = Map::from_string(input);
-    while !matches!(map.get_next_step_cell_state(), CellState::OUTSIDE) {
-        positions.insert((map.guard.row, map.guard.col));
-        while matches!(map.get_next_step_cell_state(), CellState::OBSTRUCTED) {
-            map.guard.change_direction();
+    let original_map = Map::from_string(input);
+    let mut res = 0;
+
+    for (row_i, row) in original_map.cells.iter().enumerate() {
+        for (col_i, col) in row.iter().enumerate() {
+            let is_obstacle = *col == '#';
+            let is_guard_start_pos =
+                row_i == original_map.guard.row && col_i == original_map.guard.col;
+            if is_obstacle || is_guard_start_pos {
+                continue;
+            }
+
+            let mut done = false;
+            let mut history: HashSet<(usize, usize, Direction)> = HashSet::new();
+            let mut modified_map = original_map.clone();
+            modified_map.add_obstacle(row_i, col_i);
+            while !done && !matches!(modified_map.get_next_step_cell_state(), CellState::OUTSIDE) {
+                if history.contains(&(
+                    modified_map.guard.row,
+                    modified_map.guard.col,
+                    modified_map.guard.dir,
+                )) {
+                    res += 1;
+                    done = true;
+                    break;
+                }
+                history.insert((
+                    modified_map.guard.row,
+                    modified_map.guard.col,
+                    modified_map.guard.dir,
+                ));
+                while matches!(
+                    modified_map.get_next_step_cell_state(),
+                    CellState::OBSTRUCTED
+                ) {
+                    modified_map.guard.change_direction();
+                }
+                modified_map.guard.take_step();
+            }
+            if done {
+                continue;
+            }
+            if history.contains(&(
+                modified_map.guard.row,
+                modified_map.guard.col,
+                modified_map.guard.dir,
+            )) {
+                res += 1;
+            }
+            history.insert((
+                modified_map.guard.row,
+                modified_map.guard.col,
+                modified_map.guard.dir,
+            ));
         }
-        map.guard.take_step();
     }
-    positions.insert((map.guard.row, map.guard.col));
-    println!("{}", positions.len());
+
+    println!("{res}");
 }
