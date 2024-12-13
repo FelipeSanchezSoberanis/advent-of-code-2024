@@ -2,8 +2,8 @@ use std::{fs, usize};
 
 #[derive(Debug)]
 struct Operation {
-    expected: u64,
-    numbers: Vec<u64>,
+    expected: u128,
+    numbers: Vec<u128>,
 }
 
 impl Operation {
@@ -14,16 +14,16 @@ impl Operation {
             .iter()
             .enumerate()
             .fold(Vec::new(), |mut acc, (i, number)| {
-                for _ in 0..(2_usize.pow(i.try_into().expect("could not convert usize to u64"))) {
+                for _ in 0..(3_usize.pow(i.try_into().expect("could not convert usize to u128"))) {
                     acc.push(number);
                 }
                 acc
             });
-        let binary_tree = BinaryTree::new(data);
-        let root = binary_tree.get_root();
+        let ternary_tree = TernaryTree::new(data);
+        let root = ternary_tree.get_root();
         let mut can_be_true = false;
         dfs(
-            &binary_tree,
+            &ternary_tree,
             &root,
             **root.value,
             1,
@@ -36,7 +36,7 @@ impl Operation {
 }
 
 #[derive(Debug)]
-struct BinaryTree<T> {
+struct TernaryTree<T> {
     data: Vec<T>,
 }
 
@@ -45,9 +45,9 @@ struct Node<T> {
     index: usize,
 }
 
-impl<T> BinaryTree<T> {
-    fn new(data: Vec<T>) -> BinaryTree<T> {
-        BinaryTree { data }
+impl<T> TernaryTree<T> {
+    fn new(data: Vec<T>) -> TernaryTree<T> {
+        TernaryTree { data }
     }
 
     fn get_root(&self) -> Node<&T> {
@@ -58,7 +58,18 @@ impl<T> BinaryTree<T> {
     }
 
     fn get_left(&self, node: usize) -> Option<Node<&T>> {
-        let index = 2 * node + 1;
+        let index = 3 * node + 1;
+        if index >= self.data.len() {
+            return Option::None;
+        }
+        Option::Some(Node {
+            value: &self.data[index],
+            index,
+        })
+    }
+
+    fn get_middle(&self, node: usize) -> Option<Node<&T>> {
+        let index = 3 * node + 2;
         if index >= self.data.len() {
             return Option::None;
         }
@@ -69,7 +80,7 @@ impl<T> BinaryTree<T> {
     }
 
     fn get_right(&self, node: usize) -> Option<Node<&T>> {
-        let index = 2 * node + 2;
+        let index = 3 * node + 3;
         if index >= self.data.len() {
             return Option::None;
         }
@@ -88,7 +99,7 @@ fn parse_input(input: String) -> Vec<Operation> {
             let expected = split
                 .next()
                 .expect("could not get expected number")
-                .parse::<u64>()
+                .parse::<u128>()
                 .expect("coult not parse expected number");
             let numbers = split
                 .next()
@@ -96,7 +107,7 @@ fn parse_input(input: String) -> Vec<Operation> {
                 .split(" ")
                 .map(|number_string| {
                     number_string
-                        .parse::<u64>()
+                        .parse::<u128>()
                         .expect("coult not parse number string")
                 })
                 .collect::<Vec<_>>();
@@ -106,12 +117,12 @@ fn parse_input(input: String) -> Vec<Operation> {
 }
 
 fn dfs(
-    binary_tree: &BinaryTree<&u64>,
-    node: &Node<&&u64>,
-    res: u64,
+    binary_tree: &TernaryTree<&u128>,
+    node: &Node<&&u128>,
+    res: u128,
     level: usize,
     max_level: &usize,
-    expected: &u64,
+    expected: &u128,
     can_be_true: &mut bool,
 ) {
     if level == *max_level && *expected == res {
@@ -139,6 +150,19 @@ fn dfs(
             can_be_true,
         );
     };
+    if let Some(middle_node) = binary_tree.get_middle(node.index) {
+        dfs(
+            binary_tree,
+            &middle_node,
+            (res.to_string() + &middle_node.value.to_string())
+                .parse::<u128>()
+                .expect("could not parse concat to u128"),
+            level + 1,
+            max_level,
+            expected,
+            can_be_true,
+        );
+    };
 }
 
 pub fn main() {
@@ -148,6 +172,6 @@ pub fn main() {
         .iter()
         .filter(|operation| operation.can_be_true())
         .map(|operation| operation.expected)
-        .sum::<u64>();
+        .sum::<u128>();
     println!("{res}");
 }
