@@ -38,12 +38,14 @@ fn reorder_filesystem(filesystem: &mut Vec<String>) {
     }
 }
 
-fn calculate_checksum(filesystem: Vec<String>) -> u64 {
+fn calculate_checksum(filesystem: &Vec<String>) -> u64 {
     filesystem
         .iter()
-        .filter(|&slice| slice != ".")
         .enumerate()
         .fold(0, |mut acc, (index, slice)| {
+            if slice == "." {
+                return acc;
+            }
             acc += u64::try_from(index).expect("could not parse usize into u64")
                 * slice.parse::<u64>().expect("could not parse string to u64");
             acc
@@ -54,6 +56,33 @@ pub fn main() {
     let input = fs::read_to_string("src/day09/input.txt").expect("could not read input file");
     let mut filesystem = parse_input(input);
     reorder_filesystem(&mut filesystem);
-    let checksum = calculate_checksum(filesystem);
+    let checksum = calculate_checksum(&filesystem);
     println!("{checksum}");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_checksum_one() {
+        let input = "0099811188827773336446555566.............."
+            .chars()
+            .map(|char| String::from(char))
+            .collect::<Vec<String>>();
+        let expected = 1928;
+        let actual = calculate_checksum(&input);
+        assert_eq!(expected, actual, "input: {input:?}");
+    }
+
+    #[test]
+    fn test_calculate_checksum_two() {
+        let input = "00992111777.44.333....5555.6666.....8888.."
+            .chars()
+            .map(|char| String::from(char))
+            .collect::<Vec<String>>();
+        let expected = 2858;
+        let actual = calculate_checksum(&input);
+        assert_eq!(expected, actual, "input: {input:?}");
+    }
 }
