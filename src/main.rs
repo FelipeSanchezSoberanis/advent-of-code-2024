@@ -1,3 +1,3 @@
-mod day09;
+mod day10;
 
 fn main() {}
