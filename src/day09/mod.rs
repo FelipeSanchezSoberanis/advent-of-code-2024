@@ -40,6 +40,75 @@ mod tests {
         }
     }
 
+    #[derive(Debug)]
+    struct StackEntry {
+        start_index: usize,
+        size: usize,
+        used: bool,
+    }
+
+    fn create_stack(filesystem: &Vec<String>) -> Vec<StackEntry> {
+        let mut stack = Vec::<StackEntry>::new();
+
+        let mut start = 0;
+        while start < filesystem.len() - 1 {
+            while start < filesystem.len() - 1 && filesystem[start] == "." {
+                start += 1;
+            }
+            let char = &filesystem[start];
+            let mut end = start;
+            while end < filesystem.len() && &filesystem[end] == char {
+                end += 1;
+            }
+            stack.push(StackEntry {
+                start_index: start,
+                size: end - start,
+                used: false,
+            });
+            start = end;
+        }
+
+        stack
+    }
+
+    fn part_two(filesystem: &Vec<String>) -> Vec<String> {
+        let mut moved_filesystem = filesystem.clone();
+
+        let mut stack = create_stack(filesystem);
+
+        let mut start = 0;
+        while start < filesystem.len() - 1 {
+            while start < filesystem.len() - 1 && filesystem[start] != "." {
+                start += 1;
+            }
+            let mut end = start;
+            while end < filesystem.len() - 1 && filesystem[end] == "." {
+                end += 1;
+            }
+
+            if let Some(available_memory_to_move) = stack
+                .iter_mut()
+                .rev()
+                .filter(|stack_entry| {
+                    stack_entry.start_index >= end
+                        && stack_entry.size <= end - start
+                        && !stack_entry.used
+                })
+                .next()
+            {
+                for i in 0..available_memory_to_move.size {
+                    moved_filesystem.swap(start + i, available_memory_to_move.start_index + i);
+                }
+                available_memory_to_move.used = true;
+                start = start + available_memory_to_move.size;
+            } else {
+                start = end;
+            }
+        }
+
+        moved_filesystem
+    }
+
     fn calculate_checksum(filesystem: &Vec<String>) -> u64 {
         filesystem
             .iter()
@@ -72,6 +141,29 @@ mod tests {
         part_one(&mut filesystem);
         let expected = 6201130364722;
         let actual = calculate_checksum(&filesystem);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_part_two_example() {
+        let input =
+            fs::read_to_string("src/day09/input.example.txt").expect("could not read input file");
+        let filesystem = parse_input(input);
+        let moved_filesystem = part_two(&filesystem);
+        println!("{}", moved_filesystem.join(""));
+        let expected = 2858;
+        let actual = calculate_checksum(&moved_filesystem);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_part_two() {
+        let input = fs::read_to_string("src/day09/input.txt").expect("could not read input file");
+        let filesystem = parse_input(input);
+        let moved_filesystem = part_two(&filesystem);
+        let expected = 6221662795602;
+        let actual = calculate_checksum(&moved_filesystem);
+        println!("{actual}");
         assert_eq!(expected, actual);
     }
 
