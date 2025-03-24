@@ -88,6 +88,35 @@ fn part_one(filepath: &str) -> u32 {
     score
 }
 
+fn part_two(filepath: &str) -> u32 {
+    let map = parse_input(filepath);
+
+    let mut stack = Vec::<(usize, usize)>::new();
+    let mut score = 0;
+    let counted_cells = HashSet::<(usize, usize)>::new();
+
+    map.iter().enumerate().for_each(|(row_index, row)| {
+        row.iter().enumerate().for_each(|(col_index, cell)| {
+            if *cell != 0 {
+                return;
+            }
+
+            stack.push((row_index, col_index));
+            while let Some(last_cell) = stack.pop() {
+                if map[last_cell.0][last_cell.1] == 9 {
+                    score += 1;
+                } else {
+                    get_surrounding_cells(&map, &last_cell, &counted_cells)
+                        .iter()
+                        .for_each(|surrounding_cell| stack.push(*surrounding_cell));
+                }
+            }
+        });
+    });
+
+    score
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -103,6 +132,20 @@ mod tests {
     fn test_part_one() {
         let expected = 535;
         let actual = part_one("./src/day10/input.txt");
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_part_two_example() {
+        let expected = 81;
+        let actual = part_two("./src/day10/input.example.txt");
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_part_two() {
+        let expected = 1186;
+        let actual = part_two("./src/day10/input.txt");
         assert_eq!(expected, actual);
     }
 }
