@@ -41,7 +41,7 @@ fn part_one(filepath: &str) -> usize {
         stones = updated_stones;
     }
 
-    stones.iter().len()
+    stones.len()
 }
 
 #[cfg(test)]
