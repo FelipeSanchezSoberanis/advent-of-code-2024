@@ -14,69 +14,64 @@ fn parse_input(filepath: &str) -> Vec<Vec<char>> {
 }
 
 fn part_one(filepath: &str) -> u128 {
-    let mut visited = HashSet::new();
-    let mut tracker = Vec::new();
-
     let map = parse_input(filepath);
-    map.iter().enumerate().for_each(|(row, line)| {
-        line.iter().enumerate().for_each(|(col, _)| {
-            if visited.contains(&(row, col)) {
-                return;
+
+    let deltas = Vec::<(isize, isize)>::from([(-1, 0), (0, -1), (1, 0), (0, 1)]);
+    let mut visited = HashSet::new();
+
+    map.iter()
+        .enumerate()
+        .fold(Vec::new(), |mut acc, (row, line)| {
+            line.iter()
+                .enumerate()
+                .for_each(|(col, _)| acc.push((row, col)));
+            acc
+        })
+        .iter()
+        .fold(Vec::new(), |mut tracker, &(start_row, start_col)| {
+            if visited.contains(&(start_row, start_col)) {
+                return tracker;
             }
 
             let mut area = 0;
             let mut perimeter = 0;
-            let char = map[row][col];
+            let char = map[start_row][start_col];
 
             let mut queue = VecDeque::new();
 
-            queue.push_back((row, col));
-            visited.insert((row, col));
-            while let Some((y, x)) = queue.pop_front() {
+            queue.push_back((start_row, start_col));
+            visited.insert((start_row, start_col));
+            while let Some((center_row, center_col)) = queue.pop_front() {
                 area += 1;
 
-                if y > 0 && map[y - 1][x] == char {
-                    if !visited.contains(&(y - 1, x)) {
-                        queue.push_back((y - 1, x));
-                        visited.insert((y - 1, x));
-                    }
-                } else {
-                    perimeter += 1;
-                }
-
-                if x > 0 && map[y][x - 1] == char {
-                    if !visited.contains(&(y, x - 1)) {
-                        queue.push_back((y, x - 1));
-                        visited.insert((y, x - 1));
-                    }
-                } else {
-                    perimeter += 1;
-                }
-
-                if y < map.len() - 1 && map[y + 1][x] == char {
-                    if !visited.contains(&(y + 1, x)) {
-                        queue.push_back((y + 1, x));
-                        visited.insert((y + 1, x));
-                    }
-                } else {
-                    perimeter += 1;
-                }
-
-                if x < line.len() - 1 && map[y][x + 1] == char {
-                    if !visited.contains(&(y, x + 1)) {
-                        queue.push_back((y, x + 1));
-                        visited.insert((y, x + 1));
-                    }
-                } else {
-                    perimeter += 1;
-                }
+                deltas
+                    .iter()
+                    .map(|(delta_row, delta_col)| {
+                        (
+                            center_row as isize + delta_row,
+                            center_col as isize + delta_col,
+                        )
+                    })
+                    .for_each(|(surr_row, surr_col)| {
+                        if surr_row >= 0
+                            && surr_row <= map.len() as isize - 1
+                            && surr_col >= 0
+                            && surr_col <= map[0].len() as isize - 1
+                            && map[surr_row as usize][surr_col as usize] == char
+                        {
+                            if !visited.contains(&(surr_row as usize, surr_col as usize)) {
+                                queue.push_back((surr_row as usize, surr_col as usize));
+                                visited.insert((surr_row as usize, surr_col as usize));
+                            }
+                        } else {
+                            perimeter += 1;
+                        }
+                    });
             }
 
             tracker.push((area, perimeter));
-        });
-    });
-
-    tracker
+            tracker
+        })
         .iter()
         .map(|(area, perimeter)| area * perimeter)
         .sum()
