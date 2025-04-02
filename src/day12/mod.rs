@@ -62,7 +62,7 @@ fn part_one(filepath: &str) -> u128 {
                             false => false,
                         };
 
-                        if is_cell_inbounds && is_same_char {
+                        if is_same_char {
                             if !visited.contains(&(surr_row as usize, surr_col as usize)) {
                                 queue.push_back((surr_row as usize, surr_col as usize));
                                 visited.insert((surr_row as usize, surr_col as usize));
@@ -156,14 +156,23 @@ fn part_two(filepath: &str) -> u128 {
                             corner_finder.push(false);
                         }
 
-                        if corner_finder.len() >= 3
-                            && !is_diagonal
-                            && (!corner_finder[corner_finder.len() - 3]
-                                && !corner_finder[corner_finder.len() - 1]
-                                || corner_finder[corner_finder.len() - 3]
+                        let is_external_corner = match corner_finder.len() >= 3 {
+                            true => {
+                                !corner_finder[corner_finder.len() - 3]
+                                    && !corner_finder[corner_finder.len() - 1]
+                            }
+                            false => false,
+                        };
+                        let is_internal_corner = match corner_finder.len() >= 3 {
+                            true => {
+                                corner_finder[corner_finder.len() - 3]
                                     && !corner_finder[corner_finder.len() - 2]
-                                    && corner_finder[corner_finder.len() - 1])
-                        {
+                                    && corner_finder[corner_finder.len() - 1]
+                            }
+                            false => false,
+                        };
+
+                        if !is_diagonal && (is_external_corner || is_internal_corner) {
                             corners += 1;
                         }
                     });
