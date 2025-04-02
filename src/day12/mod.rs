@@ -53,12 +53,16 @@ fn part_one(filepath: &str) -> u128 {
                         )
                     })
                     .for_each(|(surr_row, surr_col)| {
-                        if surr_row >= 0
+                        let is_cell_inbounds = surr_row >= 0
                             && surr_row <= map.len() as isize - 1
                             && surr_col >= 0
-                            && surr_col <= map[0].len() as isize - 1
-                            && map[surr_row as usize][surr_col as usize] == char
-                        {
+                            && surr_col <= map[0].len() as isize - 1;
+                        let is_same_char = match is_cell_inbounds {
+                            true => map[surr_row as usize][surr_col as usize] == char,
+                            false => false,
+                        };
+
+                        if is_cell_inbounds && is_same_char {
                             if !visited.contains(&(surr_row as usize, surr_col as usize)) {
                                 queue.push_back((surr_row as usize, surr_col as usize));
                                 visited.insert((surr_row as usize, surr_col as usize));
